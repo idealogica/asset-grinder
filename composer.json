@@ -1,0 +1,44 @@
+{
+    "name": "idealogica/asset-grinder",
+    "description": "High level asset caching minifier and obfuscator",
+    "keywords": ["asset", "php7", "php", "assetic", "uglify-js", "js-obfuscator", "minificator", "obfuscator", "minification"],
+    "type": "library",
+    "homepage": "https://github.com/idealogica/asset-grinder",
+    "license": "MIT",
+    "authors":
+    [
+        {
+            "name": "Konstatin Nikiforov",
+            "email": "konstantin@idealogica.me",
+            "homepage": "http://konstantin.idealogica.me"
+        }
+    ],
+    "require":
+    {
+        "php": ">=7.1.0",
+        "kriswallsmith/assetic": "~1.4",
+        "psr/http-message": "1.0.0"
+    },
+    "require-dev":
+    {
+        "phpunit/phpunit": "~7.5.12",
+        "idealogica/debug": "~1.1.2",
+        "guzzlehttp/psr7": "1.5"
+    },
+    "autoload":
+    {
+        "psr-4":
+        {
+            "Idealogica\\AssetGrinder\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev":
+    {
+        "classmap":
+        [
+        ]
+    }
+}
