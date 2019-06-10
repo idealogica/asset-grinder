@@ -15,14 +15,14 @@ composer require idealogica/asset-grinder:~1.0.0
 ## 3. Basic example
 
 ```
-$assetBuilder = new AssetHandler(
+$assetBuilder = new Idealogica\AssetGrinder\AssetHandler(
     ServerRequest::fromGlobals(),
     __DIR__ . '/assets',
     __DIR__ . '/public',
     $_SERVER['HOME'] . '/.npm_global/bin/uglifyjs',
     $_SERVER['HOME'] . '/.npm_global/bin/javascript-obfuscator'
 );
-$assetBuilder->buildAssetTag('pack', ['asset1.js', 'asset2.js'], AssetHandler::TYPE_JS, false, false);
+$url = $assetBuilder->buildAssetUrl('pack', ['asset1.js', 'asset2.js'], AssetHandler::TYPE_JS, false, false);
 ```
 
 ## 4. License
