@@ -1,6 +1,6 @@
 {
     "name": "idealogica/asset-grinder",
-    "description": "High level asset caching minifier and obfuscator",
+    "description": "High level asset minification and obfuscation library",
     "keywords": ["asset", "php7", "php", "assetic", "uglify-js", "js-obfuscator", "minificator", "obfuscator", "minification"],
     "type": "library",
     "homepage": "https://github.com/idealogica/asset-grinder",

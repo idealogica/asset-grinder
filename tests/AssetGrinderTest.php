@@ -193,6 +193,7 @@ class AssetGrinderTest extends TestCase
             $uglifyJsArgs,
             $jsObfuscatorArgs,
             $base64Encode,
+            '__cpa',
             $customUrlPostfix ?? '?postfix=true',
             'data-attr="true"',
             $customOrigin ?? 'https://for.test',

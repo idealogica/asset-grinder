@@ -45,6 +45,11 @@ class AssetHandler
     /**
      * @var string
      */
+    protected $customFileNamePrefix;
+
+    /**
+     * @var string
+     */
     protected $customUrlPostfix;
 
     /**
@@ -98,6 +103,7 @@ class AssetHandler
      * @param string|null $uglifyJsArgs
      * @param string|null $jsObfuscatorArgs
      * @param bool $base64Encode
+     * @param string|null $customFileNamePrefix
      * @param string|null $customUrlPostfix
      * @param string|null $customScriptTagAttr
      * @param string|null $customOrigin
@@ -112,10 +118,11 @@ class AssetHandler
         string $uglifyJsArgs = null,
         string $jsObfuscatorArgs = null,
         bool $base64Encode = true,
+        string $customFileNamePrefix = null,
         string $customUrlPostfix = null,
         string $customScriptTagAttr = null,
         string $customOrigin = null,
-        bool $debugMode = true
+        bool $debugMode = false
     ) {
         $this->serverRequest = $serverRequest;
         $this->assetsPath = realpath($assetsPath);
@@ -125,6 +132,7 @@ class AssetHandler
         $this->uglifyJsArgs = $uglifyJsArgs;
         $this->jsObfuscatorArgs = $jsObfuscatorArgs;
         $this->base64Encode = $base64Encode;
+        $this->customFileNamePrefix = $customFileNamePrefix;
         $this->customUrlPostfix = $customUrlPostfix;
         $this->customScriptTagAttr = $customScriptTagAttr;
         $this->customOrigin = $customOrigin ?: getUriOrigin($serverRequest->getUri());
@@ -223,8 +231,8 @@ class AssetHandler
         $jsObfuscatorEnabled = $params[self::PARAM_JS_OBFUSCATOR_ENABLED] ?? true;
         $jsObfuscatorArgs = $params[self::PARAM_JS_OBFUSCATOR_ARGS] ?? null;
         $base64Encode = $params[self::PARAM_BASE_64_ENCODE] ?? null;
-
-        $link = '__cpa.' . $key . '.' . $type;
+        $customFileNamePrefix = $this->customFileNamePrefix ? $this->customFileNamePrefix . '.' : '';
+        $link = $customFileNamePrefix . $key . '.' . $type;
         // optimization to avoid multiple md5_file() calls in production
         if (!$this->debugMode && $skipAssetUpdates) {
             return $link;
@@ -247,8 +255,8 @@ class AssetHandler
                 $hash .= md5($asset[0]);
             }
         }
-        $mask = '__cpa.' . $key . '*.' . $type;
-        $hash = '__cpa.' . $key . '.' . md5($hash) . '.' . $type;
+        $mask = $customFileNamePrefix . $key . '*.' . $type;
+        $hash = $customFileNamePrefix . $key . '.' . md5($hash) . '.' . $type;
         $cache = new FilesystemCache($this->assetsCachePath);
         if (!$cache->has($hash)) {
             $assetContent = '';
