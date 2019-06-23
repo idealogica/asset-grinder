@@ -42,6 +42,11 @@ class JsAssetFilter extends BaseNodeFilter
     protected $removeWhiteSpaces = false;
 
     /**
+     * @var string
+     */
+    protected $licenseStamp;
+
+    /**
      * JsAssetFilter constructor.
      *
      * @param string $uglifyjsBin
@@ -50,6 +55,7 @@ class JsAssetFilter extends BaseNodeFilter
      * @param string $jsObfuscatorArgs
      * @param bool $base64Encode
      * @param bool $removeWhiteSpaces
+     * @param string|null $licenseStamp
      */
     public function __construct(
         string $uglifyjsBin = null,
@@ -57,7 +63,8 @@ class JsAssetFilter extends BaseNodeFilter
         string $uglifyJsArgs = null,
         string $jsObfuscatorArgs = null,
         bool $base64Encode = true,
-        bool $removeWhiteSpaces = false
+        bool $removeWhiteSpaces = false,
+        string $licenseStamp = null
     ) {
         $this->uglifyjsBin = $uglifyjsBin;
         $this->jsObfuscatorBin = $jsObfuscatorBin;
@@ -65,6 +72,7 @@ class JsAssetFilter extends BaseNodeFilter
         $this->jsObfuscatorArgs = $jsObfuscatorArgs;
         $this->base64Encode = $base64Encode;
         $this->removeWhiteSpaces = $removeWhiteSpaces;
+        $this->licenseStamp = $licenseStamp;
     }
 
     /**
@@ -194,14 +202,7 @@ class JsAssetFilter extends BaseNodeFilter
     protected function addLicenseStamp(AssetInterface $asset): self
     {
         $content = $asset->getContent();
-        $content =
-            "/**" . "\n" .
-             "* @license" . "\n" .
-             "* Copyright (C) CroxyProxy service owners - All Rights Reserved" . "\n" .
-             "* Proprietary content. Unauthorized copying of this file, via any medium is prohibited" . "\n" .
-             "* Contact form: https://www.croxyproxy.com/feedback/form" . "\n" .
-             "*/" . "\n" . "\n" .
-             $content;
+        $content = $this->licenseStamp . "\n\n" . $content;
         $asset->setContent($content);
         return $this;
     }

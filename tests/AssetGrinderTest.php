@@ -197,6 +197,7 @@ class AssetGrinderTest extends TestCase
             $customUrlPostfix ?? '?postfix=true',
             'data-attr="true"',
             $customOrigin ?? 'https://for.test',
+            'LICENSE',
             $debugMode
         );
     }

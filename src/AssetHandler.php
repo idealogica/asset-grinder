@@ -88,6 +88,11 @@ class AssetHandler
     protected $customOrigin;
 
     /**
+     * @var string
+     */
+    protected $licenseStamp;
+
+    /**
      * @var bool
      */
     protected $debugMode = false;
@@ -107,6 +112,7 @@ class AssetHandler
      * @param string|null $customUrlPostfix
      * @param string|null $customScriptTagAttr
      * @param string|null $customOrigin
+     * @param string|null $licenseStamp
      * @param bool $debugMode
      */
     public function __construct(
@@ -122,6 +128,7 @@ class AssetHandler
         string $customUrlPostfix = null,
         string $customScriptTagAttr = null,
         string $customOrigin = null,
+        string $licenseStamp = null,
         bool $debugMode = false
     ) {
         $this->serverRequest = $serverRequest;
@@ -136,6 +143,7 @@ class AssetHandler
         $this->customUrlPostfix = $customUrlPostfix;
         $this->customScriptTagAttr = $customScriptTagAttr;
         $this->customOrigin = $customOrigin ?: getUriOrigin($serverRequest->getUri());
+        $this->licenseStamp = $licenseStamp;
         $this->debugMode = $debugMode;
     }
 
@@ -281,7 +289,9 @@ class AssetHandler
                             $jsObfuscatorEnabled ? $this->jsObfuscatorPath : null,
                             $uglifyJsArgs ?: $this->uglifyJsArgs,
                             $jsObfuscatorArgs ?: $this->jsObfuscatorArgs,
-                            $base64Encode ?? $this->base64Encode
+                            $base64Encode ?? $this->base64Encode,
+                            false,
+                            $this->licenseStamp
                         )];
                         break;
                 }
