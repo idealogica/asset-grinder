@@ -201,9 +201,11 @@ class JsAssetFilter extends BaseNodeFilter
      */
     protected function addLicenseStamp(AssetInterface $asset): self
     {
-        $content = $asset->getContent();
-        $content = $this->licenseStamp . "\n\n" . $content;
-        $asset->setContent($content);
+        if ($this->licenseStamp) {
+            $content = $asset->getContent();
+            $content = $this->licenseStamp . "\n\n" . $content;
+            $asset->setContent($content);
+        }
         return $this;
     }
 
