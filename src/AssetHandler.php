@@ -263,7 +263,7 @@ class AssetHandler
                 $hash .= md5($asset[0]);
             }
         }
-        $mask = $customFileNamePrefix . $key . '*.' . $type;
+        $mask = $customFileNamePrefix . $key . '.*' . $type;
         $hash = $customFileNamePrefix . $key . '.' . md5($hash) . '.' . $type;
         $cache = new FilesystemCache($this->assetsCachePath);
         if (!$cache->has($hash)) {
