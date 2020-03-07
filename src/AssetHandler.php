@@ -142,7 +142,7 @@ class AssetHandler
         $this->customFileNamePrefix = $customFileNamePrefix;
         $this->customUrlPostfix = $customUrlPostfix;
         $this->customScriptTagAttr = $customScriptTagAttr;
-        $this->customOrigin = $customOrigin ?: getUriOrigin($serverRequest->getUri());
+        $this->customOrigin = $customOrigin;
         $this->licenseStamp = $licenseStamp;
         $this->debugMode = $debugMode;
     }
@@ -154,6 +154,7 @@ class AssetHandler
      * @param bool $returnStaticUrl
      * @param bool $skipAssetUpdates
      * @param array $params
+     * @param string|null $customOrigin
      *
      * @return string
      * @throws AssetGrinderException
@@ -164,9 +165,10 @@ class AssetHandler
         string $type = self::TYPE_JS,
         bool $returnStaticUrl = true,
         bool $skipAssetUpdates = true,
-        array $params = []
+        array $params = [],
+        string $customOrigin = null
     ): string {
-        $assetUrl = $this->buildAssetUrl($key, $assets, $type, $returnStaticUrl, $skipAssetUpdates, $params);
+        $assetUrl = $this->buildAssetUrl($key, $assets, $type, $returnStaticUrl, $skipAssetUpdates, $params, $customOrigin);
         return $this->getAssetTag($assetUrl, $type);
     }
 
@@ -177,6 +179,7 @@ class AssetHandler
      * @param bool $returnStaticUrl
      * @param bool $skipAssetUpdates
      * @param array $params
+     * @param string|null $customOrigin
      *
      * @return string
      * @throws AssetGrinderException
@@ -187,10 +190,11 @@ class AssetHandler
         string $type = self::TYPE_JS,
         bool $returnStaticUrl = true,
         bool $skipAssetUpdates = true,
-        array $params = []
+        array $params = [],
+        string $customOrigin = null
     ): string {
         $asset = $this->buildAssetFile($key, $assets, $type, $skipAssetUpdates, $params);
-        return $this->getAssetUrl($asset, $returnStaticUrl);
+        return $this->getAssetUrl($asset, $returnStaticUrl, $customOrigin);
     }
 
     /**
@@ -338,10 +342,11 @@ class AssetHandler
     /**
      * @param string|array $asset
      * @param bool $returnStaticUrl
+     * @param string|null $customOrigin
      *
      * @return string
      */
-    public function getAssetUrl($asset, bool $returnStaticUrl = true): string
+    public function getAssetUrl($asset, bool $returnStaticUrl = true, string $customOrigin = null): string
     {
         if (!is_string($asset)) {
             return $asset;
@@ -359,7 +364,10 @@ class AssetHandler
             $this->assetsCachePath,
             $docRoot
         );
-        return $this->customOrigin . $relativePublicPath . '/' . $asset;
+        $customOrigin =
+            $customOrigin ?:
+                ($this->customOrigin ?: getUriOrigin($this->serverRequest->getUri()));
+        return $customOrigin . $relativePublicPath . '/' . $asset;
     }
 
     /**
