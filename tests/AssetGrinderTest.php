@@ -1,6 +1,5 @@
 <?php
 
-use GuzzleHttp\Psr7\ServerRequest;
 use Idealogica\AssetGrinder\AssetHandler;
 use PHPUnit\Framework\TestCase;
 
@@ -9,9 +8,13 @@ use PHPUnit\Framework\TestCase;
  */
 class AssetGrinderTest extends TestCase
 {
+    const WEB_SERVER_ORIGIN = 'https://www.test.tld';
+
+    const WEB_SERVER_ROOT = __DIR__ . '/public';
+
     const ASSETS_PATH = __DIR__ . '/assets';
 
-    const PUBLIC_PATH = __DIR__ . '/public';
+    const PUBLIC_PATH = __DIR__ . '/public/assets';
 
     /**
      *
@@ -37,7 +40,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsDebug()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, null, true)
+            ->createAssetHandler(null, null, null, null, true, null, true)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertEquals('var v1 = true; console.log(v1); var v2 = false; console.log(v2);', $contents);
@@ -49,7 +52,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsProd()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, null, false)
+            ->createAssetHandler(null, null, null, null, true, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp('#\(new Function\(atob\(#i', $contents);
@@ -65,7 +68,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsNoBase64()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, false, null, null, false)
+            ->createAssetHandler(null, null, null, null, false, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp('#var _0x#i', $contents);
@@ -78,7 +81,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsNoObfuscation()
     {
         $contents = $this
-            ->createAssetHandler(null, false, null, null, false, null, null, false)
+            ->createAssetHandler(null, false, null, null, false, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
@@ -93,7 +96,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsNoMinification()
     {
         $contents = $this
-            ->createAssetHandler(false, false, null, null, false, null, null, false)
+            ->createAssetHandler(false, false, null, null, false, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
@@ -108,11 +111,11 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetTagStatic()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, null, false)
+            ->createAssetHandler(null, null, null, null, true, null, false)
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, true, false);
         $contents = $this->filterAsset($contents);
         self::assertEquals(
-            '<script data-attr="true" type="text/javascript" src="https://for.test/media/work/projects/asset-grinder/release/tests/public/__cpa.pack.js?postfix=true"></script>',
+            '<script data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?postfix=true"></script>',
             $contents
         );
     }
@@ -123,11 +126,11 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetTagDynamic()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, null, false)
+            ->createAssetHandler(null, null, null, null, true, null, false)
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
-            '#' . preg_quote('<script data-attr="true" type="text/javascript" src="https://for.test/media/work/projects/asset-grinder/release/tests/public/__cpa.pack.js?postfix=true&dummy=') . '#i',
+            '#' . preg_quote('<script data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?postfix=true&dummy=') . '#i',
             $contents
         );
     }
@@ -138,11 +141,11 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetTagDynamicNoPostfix()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, '', null, false)
+            ->createAssetHandler(null, null, null, null, true, '', false)
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
-            '#' . preg_quote('<script data-attr="true" type="text/javascript" src="https://for.test/media/work/projects/asset-grinder/release/tests/public/__cpa.pack.js?dummy=') . '#i',
+            '#' . preg_quote('<script data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?dummy=') . '#i',
             $contents
         );
     }
@@ -153,11 +156,11 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetUrl()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, null, false)
+            ->createAssetHandler(null, null, null, null, true, null, false)
             ->buildAssetUrl('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, true, false);
         $contents = $this->filterAsset($contents);
         self::assertEquals(
-            'https://for.test/media/work/projects/asset-grinder/release/tests/public/__cpa.pack.js?postfix=true',
+            'https://www.test.tld/assets/__cpa.pack.js?postfix=true',
             $contents
         );
     }
@@ -169,7 +172,6 @@ class AssetGrinderTest extends TestCase
      * @param string|null $jsObfuscatorArgs
      * @param bool $base64Encode
      * @param string|null $customUrlPostfix
-     * @param string $customOrigin
      * @param bool $debugMode
      *
      * @return AssetHandler
@@ -181,11 +183,11 @@ class AssetGrinderTest extends TestCase
         string $jsObfuscatorArgs = null,
         bool $base64Encode = true,
         string $customUrlPostfix = null,
-        string $customOrigin = null,
         bool $debugMode = false
     ) {
         return new AssetHandler(
-            ServerRequest::fromGlobals(),
+            self::WEB_SERVER_ORIGIN,
+            self::WEB_SERVER_ROOT,
             self::ASSETS_PATH,
             self::PUBLIC_PATH,
             $uglifyJsPath ?? '/usr/bin/uglifyjs',
@@ -196,7 +198,6 @@ class AssetGrinderTest extends TestCase
             '__cpa',
             $customUrlPostfix ?? '?postfix=true',
             'data-attr="true"',
-            $customOrigin ?? 'https://for.test',
             'LICENSE',
             $debugMode
         );

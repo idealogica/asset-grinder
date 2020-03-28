@@ -5,7 +5,6 @@ use Assetic\Asset\StringAsset;
 use Assetic\Cache\FilesystemCache;
 use Idealogica\AssetGrinder\Exception\AssetGrinderException;
 use Idealogica\AssetGrinder\Filter\JsAssetFilter;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class AssetHandler
@@ -28,9 +27,14 @@ class AssetHandler
     const PARAM_BASE_64_ENCODE = 'base64Encode';
 
     /**
-     * @var null|ServerRequestInterface
+     * @var string
      */
-    protected $serverRequest;
+    protected $webServerOrigin;
+
+    /**
+     * @var string
+     */
+    protected $webServerRoot;
 
     /**
      * @var string
@@ -85,11 +89,6 @@ class AssetHandler
     /**
      * @var string
      */
-    protected $customOrigin;
-
-    /**
-     * @var string
-     */
     protected $licenseStamp;
 
     /**
@@ -100,7 +99,8 @@ class AssetHandler
     /**
      * AssetHandler constructor.
      *
-     * @param ServerRequestInterface $serverRequest
+     * @param string $webServerOrigin
+     * @param string $webServerRoot
      * @param string $assetsPath
      * @param string $assetsCachePath
      * @param string|null $uglifyJsPath
@@ -111,12 +111,12 @@ class AssetHandler
      * @param string|null $customFileNamePrefix
      * @param string|null $customUrlPostfix
      * @param string|null $customScriptTagAttr
-     * @param string|null $customOrigin
      * @param string|null $licenseStamp
      * @param bool $debugMode
      */
     public function __construct(
-        ServerRequestInterface $serverRequest,
+        string $webServerOrigin,
+        string $webServerRoot,
         string $assetsPath,
         string $assetsCachePath,
         string $uglifyJsPath = null,
@@ -127,11 +127,11 @@ class AssetHandler
         string $customFileNamePrefix = null,
         string $customUrlPostfix = null,
         string $customScriptTagAttr = null,
-        string $customOrigin = null,
         string $licenseStamp = null,
         bool $debugMode = false
     ) {
-        $this->serverRequest = $serverRequest;
+        $this->webServerOrigin = $webServerOrigin;
+        $this->webServerRoot = $webServerRoot;
         $this->assetsPath = realpath($assetsPath);
         $this->assetsCachePath = realpath($assetsCachePath);
         $this->uglifyJsPath = $uglifyJsPath;
@@ -142,7 +142,6 @@ class AssetHandler
         $this->customFileNamePrefix = $customFileNamePrefix;
         $this->customUrlPostfix = $customUrlPostfix;
         $this->customScriptTagAttr = $customScriptTagAttr;
-        $this->customOrigin = $customOrigin;
         $this->licenseStamp = $licenseStamp;
         $this->debugMode = $debugMode;
     }
@@ -359,14 +358,11 @@ class AssetHandler
             $asset .= strpos($asset, '?') === false ? '?' : '&';
             $asset .= 'dummy=' . $hash;
         }
-        $docRoot = (string)@$this->serverRequest->getServerParams()['DOCUMENT_ROOT'];
         $relativePublicPath = removePrefix(
             $this->assetsCachePath,
-            $docRoot
+            $this->webServerRoot
         );
-        $customOrigin =
-            $customOrigin ?:
-                ($this->customOrigin ?: getUriOrigin($this->serverRequest->getUri()));
+        $customOrigin = $customOrigin ?: $this->webServerOrigin;
         return $customOrigin . $relativePublicPath . '/' . $asset;
     }
 
