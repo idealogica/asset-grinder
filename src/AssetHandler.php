@@ -59,7 +59,7 @@ class AssetHandler
     /**
      * @var string
      */
-    protected $customScriptTagAttr;
+    protected $customTagAttr;
 
     /**
      * @var string|null
@@ -110,7 +110,7 @@ class AssetHandler
      * @param bool $base64Encode
      * @param string|null $customFileNamePrefix
      * @param string|null $customUrlPostfix
-     * @param string|null $customScriptTagAttr
+     * @param string|null $customTagAttr
      * @param string|null $licenseStamp
      * @param bool $debugMode
      */
@@ -126,7 +126,7 @@ class AssetHandler
         bool $base64Encode = true,
         string $customFileNamePrefix = null,
         string $customUrlPostfix = null,
-        string $customScriptTagAttr = null,
+        string $customTagAttr = null,
         string $licenseStamp = null,
         bool $debugMode = false
     ) {
@@ -141,7 +141,7 @@ class AssetHandler
         $this->base64Encode = $base64Encode;
         $this->customFileNamePrefix = $customFileNamePrefix;
         $this->customUrlPostfix = $customUrlPostfix;
-        $this->customScriptTagAttr = $customScriptTagAttr;
+        $this->customTagAttr = $customTagAttr;
         $this->licenseStamp = $licenseStamp;
         $this->debugMode = $debugMode;
     }
@@ -154,6 +154,7 @@ class AssetHandler
      * @param bool $skipAssetUpdates
      * @param array $params
      * @param string|null $customOrigin
+     * @param bool $asyncJs
      *
      * @return string
      * @throws AssetGrinderException
@@ -165,10 +166,11 @@ class AssetHandler
         bool $returnStaticUrl = true,
         bool $skipAssetUpdates = true,
         array $params = [],
-        string $customOrigin = null
+        string $customOrigin = null,
+        bool $asyncJs = false
     ): string {
         $assetUrl = $this->buildAssetUrl($key, $assets, $type, $returnStaticUrl, $skipAssetUpdates, $params, $customOrigin);
-        return $this->getAssetTag($assetUrl, $type);
+        return $this->getAssetTag($assetUrl, $type, $asyncJs);
     }
 
     /**
@@ -367,31 +369,32 @@ class AssetHandler
     }
 
     /**
-     * @param string|array $type
      * @param string $asset
+     * @param string|array $type
+     * @param bool $asyncJs
      *
      * @return string
      */
-    public function getAssetTag($asset, string $type = self::TYPE_JS): string
+    public function getAssetTag($asset, string $type = self::TYPE_JS, bool $asyncJs = false): string
     {
         $assetTag = '';
         switch ($type) {
             case self::TYPE_CSS:
                 if (is_string($asset)) {
                     $assetTag =
-                        '<link ' . $this->customScriptTagAttr . ' type="text/css" rel="stylesheet" href="' . $asset . '">';
+                        '<link ' . $this->customTagAttr . ' type="text/css" rel="stylesheet" href="' . $asset . '">';
                 } else if (is_array($asset)) {
                     $assetTag =
-                        '<style ' . $this->customScriptTagAttr . '>' . $asset[0] . '</style>';
+                        '<style ' . $this->customTagAttr . '>' . $asset[0] . '</style>';
                 }
                 break;
             case self::TYPE_JS:
                 if (is_string($asset)) {
                     $assetTag =
-                        '<script ' . $this->customScriptTagAttr . ' type="text/javascript" src="' . $asset . '"></script>';
+                        '<script ' . ($asyncJs ? 'async ' : '') . $this->customTagAttr . ' type="text/javascript" src="' . $asset . '"></script>';
                 } else if (is_array($asset)) {
                     $assetTag =
-                        '<script ' . $this->customScriptTagAttr . ' type="text/javascript">' . $asset[0] . '</script>';
+                        '<script ' . ($asyncJs ? 'async ' : '') . $this->customTagAttr . ' type="text/javascript">' . $asset[0] . '</script>';
                 }
                 break;
         }
