@@ -313,7 +313,7 @@ class AssetHandler
             if (file_exists($linkPath)) {
                 unlink($linkPath);
             }
-            symlink($this->assetsCachePath . '/' . $hash, $linkPath);
+            copy($this->assetsCachePath . '/' . $hash, $linkPath);
         }
         return $link;
     }
