@@ -331,9 +331,10 @@ class AssetHandler
         if (is_array($asset)) {
             $contents .= $asset[0];
         } else if (is_string($asset)) {
-            $data = @file_get_contents(($cached ? $this->assetsCachePath : $this->assetsPath) . '/' . $asset);
+            $fileName = ($cached ? $this->assetsCachePath : $this->assetsPath) . '/' . $asset;
+            $data = @file_get_contents($fileName);
             if ($data === false) {
-                throw new AssetGrinderException('No asset found');
+                throw new AssetGrinderException('No asset found: ' . $fileName);
             }
             $contents .= $data;
         }
