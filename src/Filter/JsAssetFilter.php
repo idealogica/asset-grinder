@@ -136,7 +136,7 @@ class JsAssetFilter extends BaseNodeFilter
             $cliString = "%s %s --output %s %s 2>&1";
             $jsObfuscatorArgs =
                 $this->jsObfuscatorArgs ?:
-                '--compact true --control-flow-flattening false --dead-code-injection false --debug-protection false --debug-protection-interval false --disable-console-output false --log false --rename-globals false --rotate-string-array true --self-defending true --string-array true --string-array-threshold 0.75 --unicode-escape-sequence false';
+                '--compact true --control-flow-flattening false --dead-code-injection false --debug-protection false --debug-protection-interval false --disable-console-output false --log false --rename-globals false --string-array-rotate true --self-defending true --string-array true --string-array-threshold 0.75 --unicode-escape-sequence false';
             $cliString = sprintf($cliString, $this->jsObfuscatorBin, $input, $output, $jsObfuscatorArgs);
             exec($cliString, $cliOutput, $code);
             $cliOutput = implode(' ', $cliOutput);
