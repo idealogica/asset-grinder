@@ -136,7 +136,7 @@ class JsAssetFilter extends BaseNodeFilter
             $cliString = "%s %s --output %s %s 2>&1";
             $jsObfuscatorArgs =
                 $this->jsObfuscatorArgs ?:
-                '--compact true --control-flow-flattening false --dead-code-injection false --debug-protection false --debug-protection-interval false --disable-console-output false --log false --rename-globals false --string-array-rotate true --self-defending true --string-array true --string-array-threshold 0.75 --unicode-escape-sequence false';
+                '--compact true --control-flow-flattening false --dead-code-injection false --debug-protection false --debug-protection-interval 0 --disable-console-output false --log false --rename-globals false --string-array-rotate true --self-defending true --string-array true --string-array-threshold 0.75 --unicode-escape-sequence false';
             $cliString = sprintf($cliString, $this->jsObfuscatorBin, $input, $output, $jsObfuscatorArgs);
             exec($cliString, $cliOutput, $code);
             $cliOutput = implode(' ', $cliOutput);
@@ -167,16 +167,12 @@ class JsAssetFilter extends BaseNodeFilter
      */
     protected function base64Encode(AssetInterface $asset): self
     {
-        $js = '';
         $content = $asset->getContent();
-        $hex = unpack('H*', $content);
-        $content = base64_encode($hex[1]);
-        $js .= "atob('" . $content . "').";
-        $js .= "match(/.{1,2}/g).";
-        $js .= "map(function(v){return String.fromCharCode(parseInt(v,16));}).";
-        $js .= "join('')";
-        $content = "(new Function(" . $js . "))();";
-        $asset->setContent($content);
+        $h = unpack('H*', $content);
+        $code =
+            'KG5ldyBGdW5jdGlvbihuZXcgVGV4dERlY29kZXIoJ3V0Zi04JykuZGVjb2RlKG5ldyBVaW50OEFycmF5KChh'.
+            'dG9iKCclcycpKS5tYXRjaCgvLnsxLDJ9L2cpLm1hcChiID0+IHBhcnNlSW50KGIsIDE2KSkpKSkpKCk7';
+        $asset->setContent(sprintf(base64_decode($code), base64_encode($h[1])));
         return $this;
     }
 
