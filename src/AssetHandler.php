@@ -5,6 +5,7 @@ use Assetic\Asset\StringAsset;
 use Assetic\Cache\FilesystemCache;
 use Idealogica\AssetGrinder\Exception\AssetGrinderException;
 use Idealogica\AssetGrinder\Filter\JsAssetFilter;
+use Random\RandomException;
 
 /**
  * Class AssetHandler
@@ -375,6 +376,7 @@ class AssetHandler
      * @param bool $asyncJs
      *
      * @return string
+     * @throws RandomException
      */
     public function getAssetTag($asset, string $type = self::TYPE_JS, bool $asyncJs = false): string
     {
@@ -390,12 +392,13 @@ class AssetHandler
                 }
                 break;
             case self::TYPE_JS:
+                $nonce = htmlspecialchars(base64_encode(random_bytes(16)), ENT_QUOTES, 'UTF-8');
                 if (is_string($asset)) {
                     $assetTag =
-                        '<script ' . ($asyncJs ? 'async ' : '') . $this->customTagAttr . ' type="text/javascript" src="' . $asset . '"></script>';
+                        '<script nonce="' . $nonce . '" ' . ($asyncJs ? 'async ' : '') . $this->customTagAttr . ' type="text/javascript" src="' . $asset . '"></script>';
                 } else if (is_array($asset)) {
                     $assetTag =
-                        '<script ' . ($asyncJs ? 'async ' : '') . $this->customTagAttr . ' type="text/javascript">' . $asset[0] . '</script>';
+                        '<script nonce="' . $nonce . '" ' . ($asyncJs ? 'async ' : '') . $this->customTagAttr . ' type="text/javascript">' . $asset[0] . '</script>';
                 }
                 break;
         }
