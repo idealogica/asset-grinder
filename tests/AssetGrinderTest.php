@@ -114,8 +114,8 @@ class AssetGrinderTest extends TestCase
             ->createAssetHandler(null, null, null, null, true, null, false)
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, true, false);
         $contents = $this->filterAsset($contents);
-        self::assertEquals(
-            '<script data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?postfix=true"></script>',
+        self::assertRegExp(
+            '#<script nonce="[^"]+" ' . preg_quote('data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?postfix=true"></script>') . '#i',
             $contents
         );
     }
@@ -130,7 +130,7 @@ class AssetGrinderTest extends TestCase
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
-            '#' . preg_quote('<script data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?postfix=true&dummy=') . '#i',
+            '#<script nonce="[^"]+" ' . preg_quote('data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?postfix=true&dummy=') . '#i',
             $contents
         );
     }
@@ -145,7 +145,7 @@ class AssetGrinderTest extends TestCase
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
-            '#' . preg_quote('<script data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?dummy=') . '#i',
+            '#<script nonce="[^"]+" ' . preg_quote('data-attr="true" type="text/javascript" src="https://www.test.tld/assets/__cpa.pack.js?dummy=') . '#i',
             $contents
         );
     }

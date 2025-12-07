@@ -5,7 +5,6 @@ use Assetic\Asset\StringAsset;
 use Assetic\Cache\FilesystemCache;
 use Idealogica\AssetGrinder\Exception\AssetGrinderException;
 use Idealogica\AssetGrinder\Filter\JsAssetFilter;
-use Random\RandomException;
 
 /**
  * Class AssetHandler
@@ -281,34 +280,19 @@ class AssetHandler
                     $assetContent .= $asset[0] . "\n\n";
                 }
             }
-            $Asset = new StringAsset($assetContent);
-            $Asset->setContent($assetContent);
-            if (!$this->debugMode) {
-                $filters = [];
-                switch ($type) {
-                    case self::TYPE_CSS:
-                        $filters = [];
-                        break;
-                    case self::TYPE_JS:
-                        $filters = [new JsAssetFilter(
-                            $uglifyJsEnabled ? $this->uglifyJsPath : null,
-                            $jsObfuscatorEnabled ? $this->jsObfuscatorPath : null,
-                            $uglifyJsArgs ?: $this->uglifyJsArgs,
-                            $jsObfuscatorArgs ?: $this->jsObfuscatorArgs,
-                            $base64Encode ?? $this->base64Encode,
-                            false,
-                            $this->licenseStamp
-                        )];
-                        break;
-                }
-                foreach ($filters as $filter) {
-                    $filter->filterDump($Asset);
-                }
-            }
+            $assetContent = $this->filterContent(
+                $assetContent,
+                $type,
+                $uglifyJsEnabled,
+                $jsObfuscatorEnabled,
+                $uglifyJsArgs,
+                $jsObfuscatorArgs,
+                $base64Encode
+            );
             foreach (glob($this->assetsCachePath . '/' . $mask) as $file) {
                 unlink($file);
             }
-            $cache->set($hash, $Asset->getContent());
+            $cache->set($hash, $assetContent);
             // static symlink
             $linkPath = $this->assetsCachePath . '/' . $link;
             if (file_exists($linkPath)) {
@@ -343,17 +327,14 @@ class AssetHandler
     }
 
     /**
-     * @param string|array $asset
+     * @param string $asset
      * @param bool $returnStaticUrl
      * @param string|null $customOrigin
      *
      * @return string
      */
-    public function getAssetUrl($asset, bool $returnStaticUrl = true, string $customOrigin = null): string
+    public function getAssetUrl(string $asset, bool $returnStaticUrl = true, string $customOrigin = null): string
     {
-        if (!is_string($asset)) {
-            return $asset;
-        }
         if ($returnStaticUrl) {
             $asset .= $this->customUrlPostfix;
         } else {
@@ -403,5 +384,56 @@ class AssetHandler
                 break;
         }
         return $assetTag  . "\n";
+    }
+
+    /**
+     * @param string $assetContent
+     * @param string $type
+     * @param bool $uglifyJsEnabled
+     * @param bool $jsObfuscatorEnabled
+     * @param string|null $uglifyJsArgs
+     * @param string|null $jsObfuscatorArgs
+     * @param bool $base64Encode
+     * @param bool $removeWhiteSpaces
+     * @param string|null $licenseStamp
+     *
+     * @return string
+     * @throws AssetGrinderException
+     */
+    public function filterContent(
+        string $assetContent,
+        string $type,
+        ?bool $uglifyJsEnabled = null,
+        ?bool $jsObfuscatorEnabled = null,
+        ?string $uglifyJsArgs = null,
+        ?string $jsObfuscatorArgs = null,
+        ?bool $base64Encode = true,
+        ?bool $removeWhiteSpaces = false,
+        ?string $licenseStamp = null
+    ): string {
+        $Asset = new StringAsset($assetContent);
+        $Asset->setContent($assetContent);
+        if (! $this->debugMode) {
+            $filters = [];
+            switch ($type) {
+                case self::TYPE_CSS:
+                    break;
+                case self::TYPE_JS:
+                    $filters = [new JsAssetFilter(
+                        $uglifyJsEnabled ? $this->uglifyJsPath : null,
+                        $jsObfuscatorEnabled ? $this->jsObfuscatorPath : null,
+                        $uglifyJsArgs ?: $this->uglifyJsArgs,
+                        $jsObfuscatorArgs ?: $this->jsObfuscatorArgs,
+                        $base64Encode ?? $this->base64Encode,
+                        $removeWhiteSpaces,
+                        $licenseStamp ?? $this->licenseStamp
+                    )];
+                    break;
+            }
+            foreach ($filters as $filter) {
+                $filter->filterDump($Asset);
+            }
+        }
+        return $Asset->getContent() ?: '';
     }
 }
