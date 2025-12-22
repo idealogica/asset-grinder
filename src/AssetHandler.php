@@ -277,8 +277,18 @@ class AssetHandler
                 $obfuscate = true;
                 $assetContent = '';
                 if (is_string($asset)) {
+                    $filename = basename($asset);
+                    $obfuscate = strpos($filename, '@') === false;
+                    if (!$obfuscate) {
+                        $dir = dirname($asset);
+                        $newFilename = str_replace('@', '', $filename);
+                        $asset = ($dir === '.' || $dir === '/') ?
+                            $newFilename :
+                            $dir . DIRECTORY_SEPARATOR . $newFilename
+                        ;
+                    }
                     $assetContent = file_get_contents($asset);
-                    $obfuscate = strpos(basename($asset), '@') === false;
+
                 } elseif (is_array($asset)) {
                     $assetContent = $asset[0];
                 }
