@@ -272,7 +272,8 @@ class AssetHandler
         $hash = $customFileNamePrefix . $key . '.' . md5($hash) . '.' . $type;
         $cache = new FilesystemCache($this->assetsCachePath);
         if (!$cache->has($hash)) {
-            $mergedContent = '';
+            $obfuscatedAssetContent = '';
+            $plainAssetsContent = '';
             foreach ($assets as $asset) {
                 $obfuscate = true;
                 $assetContent = '';
@@ -282,18 +283,38 @@ class AssetHandler
                 } elseif (is_array($asset)) {
                     $assetContent = $asset[0];
                 }
-                if ($assetContent) {
-                    $assetContent = $this->filterContent(
-                        $assetContent,
-                        $type,
-                        $uglifyJsEnabled,
-                        $obfuscate && $jsObfuscatorEnabled,
-                        $uglifyJsArgs,
-                        $jsObfuscatorArgs,
-                        $base64Encode
-                    );
-                    $mergedContent .= $assetContent . "\n\n";
+                if (! $assetContent) {
+                    continue;
                 }
+                $assetContent .= "\n\n";
+                if ($obfuscate) {
+                    $obfuscatedAssetContent .= $assetContent;
+                } else {
+                    $plainAssetsContent .= $assetContent;
+                }
+            }
+            $mergedContent = '';
+            if ($obfuscatedAssetContent) {
+                $mergedContent .= $this->filterContent(
+                    $obfuscatedAssetContent,
+                    $type,
+                    $uglifyJsEnabled,
+                    $jsObfuscatorEnabled,
+                    $uglifyJsArgs,
+                    $jsObfuscatorArgs,
+                    $base64Encode
+                );
+            }
+            if ($plainAssetsContent) {
+                $mergedContent .= $this->filterContent(
+                    $plainAssetsContent,
+                    $type,
+                    $uglifyJsEnabled,
+                    false,
+                    $uglifyJsArgs,
+                    $jsObfuscatorArgs,
+                    $base64Encode
+                );
             }
             $mergedContent = $this->addLicenseStamp($mergedContent);
             foreach (glob($this->assetsCachePath . '/' . $mask) as $file) {

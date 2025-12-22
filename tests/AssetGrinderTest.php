@@ -85,7 +85,7 @@ class AssetGrinderTest extends TestCase
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
-            '#' . preg_quote("var v1=!0;console.log(v1); var v2=!1;console.log(v2);") . '#i',
+            '#' . preg_quote("var v1=!0,v2=(console.log(v1),!1);console.log(v2);") . '#i',
             $contents
         );
     }
