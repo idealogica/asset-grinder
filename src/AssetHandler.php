@@ -263,7 +263,7 @@ class AssetHandler
         unset($asset);
         foreach ($assets as $asset) {
             if (is_string($asset)) {
-                $hash .= md5_file($asset);
+                $hash .= md5_file($this->getAssetFileName($asset));
             } elseif (is_array($asset)) {
                 $hash .= md5($asset[0]);
             }
@@ -277,18 +277,8 @@ class AssetHandler
                 $obfuscate = true;
                 $assetContent = '';
                 if (is_string($asset)) {
-                    $filename = basename($asset);
-                    $obfuscate = strpos($filename, '@') === false;
-                    if (!$obfuscate) {
-                        $dir = dirname($asset);
-                        $newFilename = str_replace('@', '', $filename);
-                        $asset = ($dir === '.' || $dir === '/') ?
-                            $newFilename :
-                            $dir . DIRECTORY_SEPARATOR . $newFilename
-                        ;
-                    }
-                    $assetContent = file_get_contents($asset);
-
+                    $assetFileName = $this->getAssetFileName($asset, $obfuscate);
+                    $assetContent = file_get_contents($assetFileName);
                 } elseif (is_array($asset)) {
                     $assetContent = $asset[0];
                 }
@@ -456,11 +446,32 @@ class AssetHandler
      *
      * @return ?string
      */
-    protected function addLicenseStamp(string $mergedContent): ?string
+    private function addLicenseStamp(string $mergedContent): ?string
     {
         if ($this->licenseStamp && $mergedContent) {
             return $this->licenseStamp . "\n\n" . $mergedContent;
         }
         return $mergedContent;
+    }
+
+    /**
+     * @param string $asset
+     * @param ?bool $obfuscate
+     *
+     * @return string
+     */
+    private function getAssetFileName(string $asset, ?bool &$obfuscate = null): string
+    {
+        $filename = basename($asset);
+        $obfuscate = strpos($filename, '@') === false;
+        if (!$obfuscate) {
+            $dir = dirname($asset);
+            $newFilename = str_replace('@', '', $filename);
+            return ($dir === '.' || $dir === '/') ?
+                $newFilename :
+                $dir . DIRECTORY_SEPARATOR . $newFilename
+            ;
+        }
+        return $asset;
     }
 }

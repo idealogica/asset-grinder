@@ -41,7 +41,7 @@ class AssetGrinderTest extends TestCase
     {
         $contents = $this
             ->createAssetHandler(null, null, null, null, true, null, true)
-            ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
+            ->buildAssetContents('pack', ['a1.js', '@a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertEquals('LICENSE var v1 = true; console.log(v1); var v2 = false; console.log(v2);', $contents);
     }
