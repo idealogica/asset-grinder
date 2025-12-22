@@ -272,27 +272,34 @@ class AssetHandler
         $hash = $customFileNamePrefix . $key . '.' . md5($hash) . '.' . $type;
         $cache = new FilesystemCache($this->assetsCachePath);
         if (!$cache->has($hash)) {
-            $assetContent = '';
+            $mergedContent = '';
             foreach ($assets as $asset) {
+                $obfuscate = true;
+                $assetContent = '';
                 if (is_string($asset)) {
-                    $assetContent .= file_get_contents($asset) . "\n\n";
+                    $assetContent = file_get_contents($asset);
+                    $obfuscate = strpos(basename($asset), '@') === false;
                 } elseif (is_array($asset)) {
-                    $assetContent .= $asset[0] . "\n\n";
+                    $assetContent = $asset[0];
+                }
+                if ($assetContent) {
+                    $assetContent = $this->filterContent(
+                        $assetContent,
+                        $type,
+                        $uglifyJsEnabled,
+                        $obfuscate && $jsObfuscatorEnabled,
+                        $uglifyJsArgs,
+                        $jsObfuscatorArgs,
+                        $base64Encode
+                    );
+                    $mergedContent .= $assetContent . "\n\n";
                 }
             }
-            $assetContent = $this->filterContent(
-                $assetContent,
-                $type,
-                $uglifyJsEnabled,
-                $jsObfuscatorEnabled,
-                $uglifyJsArgs,
-                $jsObfuscatorArgs,
-                $base64Encode
-            );
+            $mergedContent = $this->addLicenseStamp($mergedContent);
             foreach (glob($this->assetsCachePath . '/' . $mask) as $file) {
                 unlink($file);
             }
-            $cache->set($hash, $assetContent);
+            $cache->set($hash, $mergedContent);
             // static symlink
             $linkPath = $this->assetsCachePath . '/' . $link;
             if (file_exists($linkPath)) {
@@ -395,7 +402,6 @@ class AssetHandler
      * @param string|null $jsObfuscatorArgs
      * @param bool $base64Encode
      * @param bool $removeWhiteSpaces
-     * @param string|null $licenseStamp
      *
      * @return string
      * @throws AssetGrinderException
@@ -408,8 +414,7 @@ class AssetHandler
         ?string $uglifyJsArgs = null,
         ?string $jsObfuscatorArgs = null,
         ?bool $base64Encode = true,
-        ?bool $removeWhiteSpaces = false,
-        ?string $licenseStamp = null
+        ?bool $removeWhiteSpaces = false
     ): string {
         $Asset = new StringAsset($assetContent);
         $Asset->setContent($assetContent);
@@ -425,8 +430,7 @@ class AssetHandler
                         $uglifyJsArgs ?: $this->uglifyJsArgs,
                         $jsObfuscatorArgs ?: $this->jsObfuscatorArgs,
                         $base64Encode ?? $this->base64Encode,
-                        $removeWhiteSpaces,
-                        $licenseStamp ?? $this->licenseStamp
+                        $removeWhiteSpaces
                     )];
                     break;
             }
@@ -435,5 +439,18 @@ class AssetHandler
             }
         }
         return $Asset->getContent() ?: '';
+    }
+
+    /**
+     * @param string $assetContent
+     *
+     * @return ?string
+     */
+    protected function addLicenseStamp(string $mergedContent): ?string
+    {
+        if ($this->licenseStamp && $mergedContent) {
+            return $this->licenseStamp . "\n\n" . $mergedContent;
+        }
+        return $mergedContent;
     }
 }

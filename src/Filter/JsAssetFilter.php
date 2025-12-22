@@ -42,11 +42,6 @@ class JsAssetFilter extends BaseNodeFilter
     protected $removeWhiteSpaces = false;
 
     /**
-     * @var string
-     */
-    protected $licenseStamp;
-
-    /**
      * JsAssetFilter constructor.
      *
      * @param string $uglifyjsBin
@@ -55,7 +50,6 @@ class JsAssetFilter extends BaseNodeFilter
      * @param string $jsObfuscatorArgs
      * @param bool $base64Encode
      * @param bool $removeWhiteSpaces
-     * @param string|null $licenseStamp
      */
     public function __construct(
         string $uglifyjsBin = null,
@@ -63,8 +57,7 @@ class JsAssetFilter extends BaseNodeFilter
         string $uglifyJsArgs = null,
         string $jsObfuscatorArgs = null,
         bool $base64Encode = true,
-        bool $removeWhiteSpaces = false,
-        string $licenseStamp = null
+        bool $removeWhiteSpaces = false
     ) {
         $this->uglifyjsBin = $uglifyjsBin;
         $this->jsObfuscatorBin = $jsObfuscatorBin;
@@ -72,7 +65,6 @@ class JsAssetFilter extends BaseNodeFilter
         $this->jsObfuscatorArgs = $jsObfuscatorArgs;
         $this->base64Encode = $base64Encode;
         $this->removeWhiteSpaces = $removeWhiteSpaces;
-        $this->licenseStamp = $licenseStamp;
     }
 
     /**
@@ -93,7 +85,7 @@ class JsAssetFilter extends BaseNodeFilter
         if ($this->base64Encode) {
             $this->base64Encode($asset);
         }
-        $this->removeWhiteSpaces($asset)->addLicenseStamp($asset);
+        $this->removeWhiteSpaces($asset);
     }
 
     /**
@@ -187,21 +179,6 @@ class JsAssetFilter extends BaseNodeFilter
             return $this;
         }
         $asset->setContent(preg_replace('#[\s]+#', ' ', $asset->getContent()));
-        return $this;
-    }
-
-    /**
-     * @param AssetInterface $asset
-     *
-     * @return $this
-     */
-    protected function addLicenseStamp(AssetInterface $asset): self
-    {
-        if ($this->licenseStamp) {
-            $content = $asset->getContent();
-            $content = $this->licenseStamp . "\n\n" . $content;
-            $asset->setContent($content);
-        }
         return $this;
     }
 
