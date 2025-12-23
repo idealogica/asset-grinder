@@ -301,8 +301,7 @@ class AssetHandler
                     $uglifyJsEnabled,
                     $jsObfuscatorEnabled,
                     $uglifyJsArgs,
-                    $jsObfuscatorArgs,
-                    $base64Encode
+                    $jsObfuscatorArgs
                 );
             }
             if ($plainAssetsContent) {
@@ -312,9 +311,11 @@ class AssetHandler
                     $uglifyJsEnabled,
                     false,
                     $uglifyJsArgs,
-                    $jsObfuscatorArgs,
-                    $base64Encode
+                    $jsObfuscatorArgs
                 );
+            }
+            if ($base64Encode || (! isset($base64Encode) && $this->base64Encode)) {
+                $mergedContent = $this->base64Encode($mergedContent);
             }
             $mergedContent = $this->addLicenseStamp($mergedContent);
             foreach (glob($this->assetsCachePath . '/' . $mask) as $file) {
@@ -421,7 +422,6 @@ class AssetHandler
      * @param bool $jsObfuscatorEnabled
      * @param string|null $uglifyJsArgs
      * @param string|null $jsObfuscatorArgs
-     * @param bool $base64Encode
      * @param bool $removeWhiteSpaces
      *
      * @return string
@@ -434,7 +434,6 @@ class AssetHandler
         ?bool $jsObfuscatorEnabled = null,
         ?string $uglifyJsArgs = null,
         ?string $jsObfuscatorArgs = null,
-        ?bool $base64Encode = true,
         ?bool $removeWhiteSpaces = false
     ): string {
         $Asset = new StringAsset($assetContent);
@@ -450,7 +449,6 @@ class AssetHandler
                         $jsObfuscatorEnabled ? $this->jsObfuscatorPath : null,
                         $uglifyJsArgs ?: $this->uglifyJsArgs,
                         $jsObfuscatorArgs ?: $this->jsObfuscatorArgs,
-                        $base64Encode ?? $this->base64Encode,
                         $removeWhiteSpaces
                     )];
                     break;
@@ -463,7 +461,24 @@ class AssetHandler
     }
 
     /**
-     * @param string $assetContent
+     * @param string $mergedContent
+     *
+     * @return string
+     */
+    protected function base64Encode(string $mergedContent): string
+    {
+        if (! $mergedContent) {
+            return $mergedContent;
+        }
+        $h = unpack('H*', $mergedContent);
+        $code =
+            'KG5ldyBGdW5jdGlvbihuZXcgVGV4dERlY29kZXIoJ3V0Zi04JykuZGVjb2RlKG5ldyBVaW50OEFycmF5KChh'.
+            'dG9iKCclcycpKS5tYXRjaCgvLnsxLDJ9L2cpLm1hcChiID0+IHBhcnNlSW50KGIsIDE2KSkpKSkpKCk7';
+        return sprintf(base64_decode($code), base64_encode($h[1]));
+    }
+
+    /**
+     * @param string $mergedContent
      *
      * @return ?string
      */

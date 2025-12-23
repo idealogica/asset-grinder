@@ -34,11 +34,6 @@ class JsAssetFilter extends BaseNodeFilter
     /**
      * @var bool
      */
-    protected $base64Encode = true;
-
-    /**
-     * @var bool
-     */
     protected $removeWhiteSpaces = false;
 
     /**
@@ -48,7 +43,6 @@ class JsAssetFilter extends BaseNodeFilter
      * @param string $jsObfuscatorBin
      * @param string $uglifyJsArgs
      * @param string $jsObfuscatorArgs
-     * @param bool $base64Encode
      * @param bool $removeWhiteSpaces
      */
     public function __construct(
@@ -56,14 +50,12 @@ class JsAssetFilter extends BaseNodeFilter
         string $jsObfuscatorBin = null,
         string $uglifyJsArgs = null,
         string $jsObfuscatorArgs = null,
-        bool $base64Encode = true,
         bool $removeWhiteSpaces = false
     ) {
         $this->uglifyjsBin = $uglifyjsBin;
         $this->jsObfuscatorBin = $jsObfuscatorBin;
         $this->uglifyJsArgs = $uglifyJsArgs;
         $this->jsObfuscatorArgs = $jsObfuscatorArgs;
-        $this->base64Encode = $base64Encode;
         $this->removeWhiteSpaces = $removeWhiteSpaces;
     }
 
@@ -82,9 +74,6 @@ class JsAssetFilter extends BaseNodeFilter
     public function filterDump(AssetInterface $asset): void
     {
         $this->obfuscate($asset);
-        if ($this->base64Encode) {
-            $this->base64Encode($asset);
-        }
         $this->removeWhiteSpaces($asset);
     }
 
@@ -150,22 +139,6 @@ class JsAssetFilter extends BaseNodeFilter
         }
         $asset->setContent(file_get_contents($output));
         return $this->unlinkTempFiles($input, $output);
-    }
-
-    /**
-     * @param AssetInterface $asset
-     *
-     * @return $this
-     */
-    protected function base64Encode(AssetInterface $asset): self
-    {
-        $content = $asset->getContent();
-        $h = unpack('H*', $content);
-        $code =
-            'KG5ldyBGdW5jdGlvbihuZXcgVGV4dERlY29kZXIoJ3V0Zi04JykuZGVjb2RlKG5ldyBVaW50OEFycmF5KChh'.
-            'dG9iKCclcycpKS5tYXRjaCgvLnsxLDJ9L2cpLm1hcChiID0+IHBhcnNlSW50KGIsIDE2KSkpKSkpKCk7';
-        $asset->setContent(sprintf(base64_decode($code), base64_encode($h[1])));
-        return $this;
     }
 
     /**
