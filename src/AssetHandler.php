@@ -266,8 +266,25 @@ class AssetHandler
         $hash = $customFileNamePrefix . $key . '.' . md5($hash) . '.' . $type;
         $cache = new FilesystemCache($this->assetsCachePath);
         if (!$cache->has($hash)) {
-            $obfuscatedAssetContent = '';
+            $mergedAssetsContent = '';
             $plainAssetsContent = '';
+            $obfuscatedAssetContent = '';
+            $filterAsset = function ($assetContent, $disableObfuscator) use (
+                $type,
+                $uglifyJsEnabled,
+                $jsObfuscatorEnabled,
+                $uglifyJsArgs,
+                $jsObfuscatorArgs
+            ) {
+                return $this->filterContent(
+                    $assetContent,
+                    $type,
+                    $uglifyJsEnabled,
+                    $disableObfuscator ? false : $jsObfuscatorEnabled,
+                    $uglifyJsArgs,
+                    $jsObfuscatorArgs
+                );
+            };
             foreach ($assets as $asset) {
                 $obfuscate = true;
                 $assetContent = '';
@@ -282,40 +299,33 @@ class AssetHandler
                 }
                 $assetContent .= "\n\n";
                 if ($obfuscate) {
+                    if ($plainAssetsContent) {
+                        $mergedAssetsContent .= $filterAsset($plainAssetsContent, true);
+                        $plainAssetsContent = '';
+                    }
                     $obfuscatedAssetContent .= $assetContent;
                 } else {
+                    if ($obfuscatedAssetContent) {
+                        $mergedAssetsContent .= $filterAsset($obfuscatedAssetContent, false);
+                        $obfuscatedAssetContent = '';
+                    }
                     $plainAssetsContent .= $assetContent;
                 }
             }
-            $mergedContent = '';
-            if ($obfuscatedAssetContent) {
-                $mergedContent .= $this->filterContent(
-                    $obfuscatedAssetContent,
-                    $type,
-                    $uglifyJsEnabled,
-                    $jsObfuscatorEnabled,
-                    $uglifyJsArgs,
-                    $jsObfuscatorArgs
-                );
-            }
             if ($plainAssetsContent) {
-                $mergedContent .= $this->filterContent(
-                    $plainAssetsContent,
-                    $type,
-                    $uglifyJsEnabled,
-                    false,
-                    $uglifyJsArgs,
-                    $jsObfuscatorArgs
-                );
+                $mergedAssetsContent .= $filterAsset($plainAssetsContent, true);
+            }
+            if ($obfuscatedAssetContent) {
+                $mergedAssetsContent .= $filterAsset($obfuscatedAssetContent, false);
             }
             if ($base64Encode || (! isset($base64Encode) && $this->base64Encode)) {
-                $mergedContent = $this->base64Encode($mergedContent);
+                $mergedAssetsContent = $this->base64Encode($mergedAssetsContent);
             }
-            $mergedContent = $this->addLicenseStamp($mergedContent);
+            $mergedAssetsContent = $this->addLicenseStamp($mergedAssetsContent);
             foreach (glob($this->assetsCachePath . '/' . $mask) as $file) {
                 unlink($file);
             }
-            $cache->set($hash, $mergedContent);
+            $cache->set($hash, $mergedAssetsContent);
             // static symlink
             $linkPath = $this->assetsCachePath . '/' . $link;
             if (file_exists($linkPath)) {
