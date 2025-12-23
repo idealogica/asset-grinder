@@ -255,12 +255,6 @@ class AssetHandler
             throw new AssetGrinderException('No assets to build passed');
         }
         $hash = '';
-        foreach ($assets as &$asset) {
-            if (is_string($asset)) {
-                $asset = $this->assetsPath . '/' . $asset;
-            }
-        }
-        unset($asset);
         foreach ($assets as $asset) {
             if (is_string($asset)) {
                 $hash .= md5_file($this->getAssetFileName($asset));
@@ -498,16 +492,10 @@ class AssetHandler
      */
     private function getAssetFileName(string $asset, ?bool &$obfuscate = null): string
     {
-        $filename = basename($asset);
-        $obfuscate = strpos($filename, '@') === false;
+        $obfuscate = $asset[0] !== '@';
         if (!$obfuscate) {
-            $dir = dirname($asset);
-            $newFilename = str_replace('@', '', $filename);
-            return ($dir === '.' || $dir === '/') ?
-                $newFilename :
-                $dir . DIRECTORY_SEPARATOR . $newFilename
-            ;
+            $asset = substr($asset, 1);
         }
-        return $asset;
+        return $this->assetsPath . DIRECTORY_SEPARATOR . $asset;
     }
 }
