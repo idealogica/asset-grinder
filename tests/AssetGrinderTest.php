@@ -40,7 +40,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsDebug()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, false, null, true)
+            ->createAssetHandler(null, null, null, null, null, null, true)
             ->buildAssetContents('pack', ['a1.js', '@a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertEquals('LICENSE var v1 = true; console.log(v1); var v2 = false; console.log(v2);', $contents);
@@ -52,14 +52,11 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsProd()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, false)
+            ->createAssetHandler(null, null, null, null, function ($str) { return '_BEGIN_ ' . $str . ' _END_'; }, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
-        self::assertRegExp('#' . preg_quote("(new Function(new TextDecoder('utf-8')") . '#i', $contents);
-        self::assertRegExp(
-            '#' . preg_quote("map(b => parseInt(b, 16))") . '#i',
-            $contents
-        );
+        self::assertRegExp('#^LICENSE _BEGIN_#i', $contents);
+        self::assertRegExp('#_END_$#i', $contents);
     }
 
     /**
@@ -68,7 +65,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsNoBase64()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, false, null, false)
+            ->createAssetHandler(null, null, null, null, null, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp('#var _0x#i', $contents);
@@ -81,7 +78,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsNoObfuscation()
     {
         $contents = $this
-            ->createAssetHandler(null, false, null, null, false, null, false)
+            ->createAssetHandler(null, false, null, null, null, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
@@ -96,7 +93,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetContentsNoMinification()
     {
         $contents = $this
-            ->createAssetHandler(false, false, null, null, false, null, false)
+            ->createAssetHandler(false, false, null, null, null, null, false)
             ->buildAssetContents('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
@@ -111,7 +108,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetTagStatic()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, false)
+            ->createAssetHandler(null, null, null, null, null, null, false)
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, true, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
@@ -126,7 +123,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetTagDynamic()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, false)
+            ->createAssetHandler(null, null, null, null, null, null, false)
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
@@ -141,7 +138,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetTagDynamicNoPostfix()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, '', false)
+            ->createAssetHandler(null, null, null, null, null, '', false)
             ->buildAssetTag('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, false, false);
         $contents = $this->filterAsset($contents);
         self::assertRegExp(
@@ -156,7 +153,7 @@ class AssetGrinderTest extends TestCase
     public function testBuildAssetUrl()
     {
         $contents = $this
-            ->createAssetHandler(null, null, null, null, true, null, false)
+            ->createAssetHandler(null, null, null, null, null, null, false)
             ->buildAssetUrl('pack', ['a1.js', 'a2.js'], AssetHandler::TYPE_JS, true, false);
         $contents = $this->filterAsset($contents);
         self::assertEquals(
@@ -170,7 +167,7 @@ class AssetGrinderTest extends TestCase
      * @param string|null $jsObfuscatorPath
      * @param string|null $uglifyJsArgs
      * @param string|null $jsObfuscatorArgs
-     * @param bool $base64Encode
+     * @param callable|null $processAssetContent
      * @param string|null $customUrlPostfix
      * @param bool $debugMode
      *
@@ -181,7 +178,7 @@ class AssetGrinderTest extends TestCase
         string $jsObfuscatorPath = null,
         string $uglifyJsArgs = null,
         string $jsObfuscatorArgs = null,
-        bool $base64Encode = true,
+        callable $processAssetContent = null,
         string $customUrlPostfix = null,
         bool $debugMode = false
     ) {
@@ -194,7 +191,7 @@ class AssetGrinderTest extends TestCase
             $jsObfuscatorPath ?? '/usr/bin/javascript-obfuscator',
             $uglifyJsArgs,
             $jsObfuscatorArgs,
-            $base64Encode,
+            $processAssetContent,
             '__cpa',
             $customUrlPostfix ?? '?postfix=true',
             'data-attr="true"',

@@ -24,7 +24,7 @@ class AssetHandler
 
     const PARAM_JS_OBFUSCATOR_ARGS = 'jsObfuscatorArgs';
 
-    const PARAM_BASE_64_ENCODE = 'base64Encode';
+    const PARAM_PROCESS_ASSET_CONTENT = 'processAssetContent';
 
     /**
      * @var string
@@ -82,9 +82,9 @@ class AssetHandler
     protected $jsObfuscatorArgs;
 
     /**
-     * @var bool
+     * @var callable|null
      */
-    protected $base64Encode = true;
+    protected $processAssetContent;
 
     /**
      * @var string
@@ -107,7 +107,7 @@ class AssetHandler
      * @param string|null $jsObfuscatorPath
      * @param string|null $uglifyJsArgs
      * @param string|null $jsObfuscatorArgs
-     * @param bool $base64Encode
+     * @param callable|null $processAssetContent
      * @param string|null $customFileNamePrefix
      * @param string|null $customUrlPostfix
      * @param string|null $customTagAttr
@@ -123,7 +123,7 @@ class AssetHandler
         string $jsObfuscatorPath = null,
         string $uglifyJsArgs = null,
         string $jsObfuscatorArgs = null,
-        bool $base64Encode = true,
+        callable $processAssetContent = null,
         string $customFileNamePrefix = null,
         string $customUrlPostfix = null,
         string $customTagAttr = null,
@@ -138,7 +138,7 @@ class AssetHandler
         $this->jsObfuscatorPath = $jsObfuscatorPath;
         $this->uglifyJsArgs = $uglifyJsArgs;
         $this->jsObfuscatorArgs = $jsObfuscatorArgs;
-        $this->base64Encode = $base64Encode;
+        $this->processAssetContent = $processAssetContent;
         $this->customFileNamePrefix = $customFileNamePrefix;
         $this->customUrlPostfix = $customUrlPostfix;
         $this->customTagAttr = $customTagAttr;
@@ -243,7 +243,7 @@ class AssetHandler
         $uglifyJsArgs = $params[self::PARAM_UGLIFY_JS_ARGS] ?? null;
         $jsObfuscatorEnabled = $params[self::PARAM_JS_OBFUSCATOR_ENABLED] ?? true;
         $jsObfuscatorArgs = $params[self::PARAM_JS_OBFUSCATOR_ARGS] ?? null;
-        $base64Encode = $params[self::PARAM_BASE_64_ENCODE] ?? null;
+        $processAssetContent = $params[self::PARAM_PROCESS_ASSET_CONTENT] ?? $this->processAssetContent;
         $customFileNamePrefix = $this->customFileNamePrefix ? $this->customFileNamePrefix . '.' : '';
         $link = $customFileNamePrefix . $key . '.' . $type;
         // optimization to avoid multiple md5_file() calls in production
@@ -318,8 +318,8 @@ class AssetHandler
             if ($obfuscatedAssetContent) {
                 $mergedAssetsContent .= $filterAsset($obfuscatedAssetContent, false);
             }
-            if ($base64Encode || (! isset($base64Encode) && $this->base64Encode)) {
-                $mergedAssetsContent = $this->base64Encode($mergedAssetsContent);
+            if ($processAssetContent) {
+                $mergedAssetsContent = $processAssetContent($mergedAssetsContent);
             }
             $mergedAssetsContent = $this->addLicenseStamp($mergedAssetsContent);
             foreach (glob($this->assetsCachePath . '/' . $mask) as $file) {
@@ -462,23 +462,6 @@ class AssetHandler
             }
         }
         return $Asset->getContent() ?: '';
-    }
-
-    /**
-     * @param string $mergedContent
-     *
-     * @return string
-     */
-    protected function base64Encode(string $mergedContent): string
-    {
-        if (! $mergedContent) {
-            return $mergedContent;
-        }
-        $h = unpack('H*', $mergedContent);
-        $code =
-            'KG5ldyBGdW5jdGlvbihuZXcgVGV4dERlY29kZXIoJ3V0Zi04JykuZGVjb2RlKG5ldyBVaW50OEFycmF5KChh'.
-            'dG9iKCclcycpKS5tYXRjaCgvLnsxLDJ9L2cpLm1hcChiID0+IHBhcnNlSW50KGIsIDE2KSkpKSkpKCk7';
-        return sprintf(base64_decode($code), base64_encode($h[1]));
     }
 
     /**

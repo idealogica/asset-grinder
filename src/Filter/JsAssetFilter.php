@@ -94,7 +94,7 @@ class JsAssetFilter extends BaseNodeFilter
             $code = 0;
             $cliOutput = [];
             $cliString = '%s %s -o %s %s 2>&1';
-            $uglifyJsArgs = $this->uglifyJsArgs ?: '--compress --mangle --mangle-props regex=/.\\\$\$/';
+            $uglifyJsArgs = $this->uglifyJsArgs ?: '--compress --output-opts ascii_only=true --mangle --mangle-props regex=/.\\\$\$/';
             $cliString = sprintf($cliString, $this->uglifyjsBin, $uglifyJsArgs, $output, $input);
             exec($cliString, $cliOutput, $code);
             $cliOutput = implode(' ', $cliOutput);
