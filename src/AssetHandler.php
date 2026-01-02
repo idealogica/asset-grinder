@@ -318,7 +318,7 @@ class AssetHandler
             if ($obfuscatedAssetContent) {
                 $mergedAssetsContent .= $filterAsset($obfuscatedAssetContent, false);
             }
-            if ($processAssetContent) {
+            if ($type === self::TYPE_JS && $processAssetContent) {
                 $mergedAssetsContent = $processAssetContent($mergedAssetsContent);
             }
             $mergedAssetsContent = $this->addLicenseStamp($mergedAssetsContent);
